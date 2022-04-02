@@ -7,6 +7,7 @@ var mongoose = require("mongoose");
 mongoose.set("useFindAndModify", false);
 const AssignPolygon = require("../models/AssignRegionModel");
 const FenceModel = require("../models/PolygonModel");
+const Polygon = require("../models/PolygonModel");
 
 const LatLng = class {
 	constructor(lat, lng, time, inFence){
@@ -16,6 +17,7 @@ const LatLng = class {
 		this.inFence = inFence;
 	}
 };
+
 
 exports.addUserLocation = [
   auth,
@@ -113,8 +115,9 @@ exports.addUserLocation = [
                         var employeeLocation = new EmployeeLocation({
                           employee: req.user._id,
                           fence: assignFence.region,
-						  assignFenceId: assignFence._id,
+						              assignFenceId: assignFence._id,
                           date: req.body.date,
+                          user: assignFence.user,
                           locations: userLocation,
                         });
 						employeeLocation.save(function (err) {
@@ -148,7 +151,6 @@ exports.addUserLocation = [
     }
   },
 ];
-
 
 
 

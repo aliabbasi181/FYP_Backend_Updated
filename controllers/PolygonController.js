@@ -8,6 +8,8 @@ const auth = require("../middlewares/jwt");
 var mongoose = require("mongoose");
 const AssignRegionModel = require("../models/AssignRegionModel");
 mongoose.set("useFindAndModify", false);
+const EmployeeLocation = require("../models/EmployeeLocationModel");
+const PolygonModel = require("../models/PolygonModel");
 //require("../models/LatLng");
 // polygon Schema
 
@@ -31,9 +33,10 @@ function PolygonData(data) {
  * @returns {Object}
  */
 exports.polygonList = [
+	auth,
 	function (req, res) {
 		try {
-			Polygon.find().sort({'createdAt' : -1}).then((polygon)=>{
+			Polygon.find({user: req.user._id}).sort({'createdAt' : -1}).then((polygon)=>{
 				if(polygon.length > 0){
 					return apiResponse.successResponseWithData(res, "Operation success", polygon);
 				}else{
@@ -126,14 +129,16 @@ exports.polygonAssign = [
 					user: req.user
 				}
 			);
-			console.log(assignRegion);
 			if (!errors.isEmpty()) {
 				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
 			}
 			else {
+				console.log(assignRegion);
 				EmployeeModel.findOne({_id: assignRegion.employee}).then((user) => {
+					console.log(user);
 					if(user != null){
 						EmployeeModel.findOne({user: req.user}).then((data) => {
+							console.log(data);
 							if(data != null){
 								Polygon.findOne({_id: assignRegion.region}).then((polygon) => {
 									if(polygon != null){
@@ -199,13 +204,73 @@ exports.getAssignedFences = [
 	auth, 
 	(req, res) => {
 		try{
-			AssignPolygon.find({})
+			if(req.user.role == "organization"){
+				AssignPolygon.find({user: req.user._id}).then((data) => {
+					if(data != null){
+						return apiResponse.successResponseWithData(res, "Success", data);
+					}
+					else{
+						return apiResponse.successResponseWithData(res, "No data");
+					}
+				});
+			}
+			else{
+				AssignPolygon.find({employee: req.user._id}).then((data) => {
+					if(data != null){
+						return apiResponse.successResponseWithData(res, "Success", data);
+					}
+					else{
+						return apiResponse.successResponseWithData(res, "No data");
+					}
+				});
+			}
 		}catch(ex){
-			//throw error in json response with status 500. 
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
 ];
+
+const UserLocationData = class {
+	constructor(lat, lng, fenceId, fenceName, inFence, employeeId, employeeName){
+		this.lat = lat;
+		this.lng = lng;
+		this.employeeId = employeeId;
+		this.fenceId = fenceId;
+		this.fenceName = fenceName;
+		this.inFence = inFence;
+		this.employeeName = employeeName
+	}
+};
+
+exports.currentLocations = [
+	auth,
+	function (req, res) {
+		try {
+			var data = [];
+			EmployeeLocation.find({user: req.user._id}).then((locations) => {
+				locations.forEach(element => {
+					var location = element.locations[(element.locations.length - 1)];
+					//console.log(location)
+					EmployeeModel.findOne({_id: element.employee}).then((employee) => {
+						//console.log(employee)
+						PolygonModel.findOne({_id: element.fence}).then((fence) => {
+							console.log(true)
+							data.push(new UserLocationData(
+								
+							))
+						})
+					});
+				});
+				console.log(data);
+
+				return apiResponse.successResponseWithData(res, "Current locations of employees", data);
+			});
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, err);
+		}
+	}
+];
+
 
 /**
  * Book update.

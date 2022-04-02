@@ -58,29 +58,30 @@ exports.register = [
 					// Html email body
 					let html = "<p>Please Confirm your Account.</p><p>OTP: "+otp+"</p>";
 					// Send confirmation email
-					mailer.send(
-						constants.confirmEmails.from, 
-						req.body.email,
-						"Confirm Account",
-						html
-					).then(function(){
-						// Save user.
-						employee.save(function (err) {
-							if (err) { return apiResponse.ErrorResponse(res, err); }
-							let employeeData = {
-								_id: employee._id,
-								name: req.body.name,
-								email: req.body.email,
-								cnic: req.body.cnic,
-								role: req.body.role,
-								designation: req.body.designation,
-							};
-							return apiResponse.successResponseWithData(res,"Registration Success.", employeeData);
-						});
-					}).catch(err => {
-						console.log(err);
-						return apiResponse.ErrorResponse(res,err);
-					}) ;
+					employee.save(function (err) {
+						if (err) { return apiResponse.ErrorResponse(res, err); }
+						let employeeData = {
+							_id: employee._id,
+							name: req.body.name,
+							email: req.body.email,
+							cnic: req.body.cnic,
+							role: req.body.role,
+							designation: req.body.designation,
+						};
+						return apiResponse.successResponseWithData(res,"Registration Success.", employeeData);
+					});
+					// mailer.send(
+					// 	constants.confirmEmails.from, 
+					// 	req.body.email,
+					// 	"Confirm Account",
+					// 	html
+					// ).then(function(){
+					// 	// Save user.
+						
+					// }).catch(err => {
+					// 	console.log(err);
+					// 	return apiResponse.ErrorResponse(res,err);
+					// }) ;
 				});
 			}
 		} catch (err) {

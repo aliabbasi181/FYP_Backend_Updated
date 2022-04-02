@@ -9,6 +9,7 @@ const jwt = require("jsonwebtoken");
 const mailer = require("../helpers/mailer");
 const { constants } = require("../helpers/constants");
 const EmployeeModel = require("../models/EmployeeModel");
+const auth = require("../middlewares/jwt");
 
 /**
  * User registration.
@@ -20,6 +21,37 @@ const EmployeeModel = require("../models/EmployeeModel");
  *
  * @returns {Object}
  */
+
+ exports.getUserData = [
+	auth, 
+	(req, res) => {
+		try{
+			if(req.user.role == "organization"){
+				UserModel.find({_id: req.user._id}).then((data) => {
+					if(data != null){
+						return apiResponse.successResponseWithData(res, "Success", data);
+					}
+					else{
+						return apiResponse.successResponseWithData(res, "No data");
+					}
+				});
+			}
+			else{
+				EmployeeModel.find({_id: req.user._id}).then((data) => {
+					if(data != null){
+						return apiResponse.successResponseWithData(res, "Success", data);
+					}
+					else{
+						return apiResponse.successResponseWithData(res, "No data");
+					}
+				});
+			}
+		}catch(ex){
+			return apiResponse.ErrorResponse(res, err);
+		}
+	}
+];
+
 exports.register = [
 	body("email").isLength({ min: 1 }).trim().withMessage("Email must be specified.")
 		.isEmail().withMessage("Email must be a valid email address.").custom((value) => {
