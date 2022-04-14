@@ -18,6 +18,76 @@ const LatLng = class {
 	}
 };
 
+const UserLocationData = class {
+	constructor(lat, lng, fenceId, inFence, employeeId){
+		this.lat = lat;
+		this.lng = lng;
+    this.fenceId = fenceId;
+    this.inFence = inFence;
+		this.employeeId = employeeId;
+	}
+};
+
+exports.getAllEmployeesLastLocation = [
+  auth,
+  (req, res) => {
+    try{
+      var data = [];
+      EmployeeLocation.find({user: req.user._id}).then((locations) => {
+        if(locations.length !== 0){
+          locations.forEach(element => {
+            data.push(
+              new UserLocationData(element.locations[element.locations.length-1].lat, element.locations[element.locations.length-1].lng, element.fence, element.locations[element.locations.length-1].inFence, element.employee)
+            );
+          });
+          console.log(data);
+          return apiResponse.successResponseWithData(res,"locations get Success.", data);
+        }
+        else{
+          return apiResponse.successResponseWithData(res,"no locations found", data);
+        }
+      });
+    }catch(err){
+    }
+  }
+];
+
+exports.getEmployeeLocationOnDate = [
+  (req, res) => {
+    try{
+      EmployeeLocation.find({employee: req.body.employee, date: req.body.date}).then((locations) => {
+        if(locations.length !== 0){
+          return apiResponse.successResponseWithData(res,"locations get Success.", locations);
+        }
+        else{
+          return apiResponse.successResponseWithData(res,"No locations found", locations);
+        }
+      
+    });
+    }catch(err){
+    }
+  }
+];
+
+exports.getEmployeeLastLocation = [
+  (req, res) => {
+    try{
+      let date_ob = new Date();
+      var dateInString = date_ob.getDate()+"/"+(date_ob.getMonth()+1)+"/"+date_ob.getFullYear();
+      EmployeeLocation.find({employee: req.body.employee, date: dateInString}).then((locations) => {
+        if(locations.length !== 0){
+          return apiResponse.successResponseWithData(res,"locations get Success.", locations);
+        }
+        else{
+          return apiResponse.successResponseWithData(res,"no locations found", locations);
+        }
+      
+    });
+    }catch(err){
+    }
+  }
+];
+
 
 exports.addUserLocation = [
   auth,
@@ -94,7 +164,7 @@ exports.addUserLocation = [
 						});
 						var isInFence = isUserInFence(req.body.lat, req.body.lng, polygon);
 						console.log(isInFence);
-						oldLocations.push(new LatLng(req.body.lat, req.body.lng, req.body.time, false));
+						oldLocations.push(new LatLng(req.body.lat, req.body.lng, req.body.time, isInFence));
 						var employeeLocation = new EmployeeLocation({
 							employee: req.user._id,
 							fence: assignFence.region,
@@ -111,7 +181,7 @@ exports.addUserLocation = [
 						});
                       } else {
 						var userLocation = [];
-						userLocation.push(new LatLng(req.body.lat, req.body.lng, req.body.time, true));
+						userLocation.push(new LatLng(req.body.lat, req.body.lng, req.body.time, isInFence));
                         var employeeLocation = new EmployeeLocation({
                           employee: req.user._id,
                           fence: assignFence.region,
@@ -128,14 +198,14 @@ exports.addUserLocation = [
                     });
                   }
 				  else{
-					return apiResponse.ErrorResponse(res, "you are not allowed to save location at this time in this fence");
+					return apiResponse.successResponseWithData(res, "you are not allowed to save location at this time in this fence");
 				  }
                 }
               });
 				//return apiResponse.ErrorResponse(res, "No assigned fence to you at this date and time");
 			  
             } else {
-				return apiResponse.ErrorResponse(res, "No assigned fence to you");
+				return apiResponse.successResponseWithData(res, "No assigned fence to you");
             }
           }
         );

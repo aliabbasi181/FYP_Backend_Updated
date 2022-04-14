@@ -112,9 +112,9 @@ exports.register = [
 	exports.employeeDetail = [
 		auth,
 		function (req, res) {
-			console.log(req.params);
+			console.log(req.user._id);
 			try {
-				EmployeeModel.findOne({_id: req.params.id},"").then((employee)=>{                
+				EmployeeModel.findOne({_id: req.user._id},"").then((employee)=>{                
 					if(employee !== null){
 						return apiResponse.successResponseWithData(res, "Operation success", employee);
 					}else{
