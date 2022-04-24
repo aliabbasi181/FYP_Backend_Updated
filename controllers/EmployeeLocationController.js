@@ -13,7 +13,7 @@ const LatLng = class {
 	constructor(lat, lng, time, inFence){
 		this.lat = lat;
 		this.lng = lng;
-		this.time = time;
+    this.time = time;
 		this.inFence = inFence;
 	}
 };
@@ -69,6 +69,85 @@ exports.getEmployeeLocationOnDate = [
   }
 ];
 
+exports.getEmployeeLocationOnTwoDate = [
+  (req, res) => {
+    try{
+      EmployeeLocation.find({employee: req.body.employee}).then((locations) => {
+        var selectedLocations = [];
+        if(locations.length !== 0){
+          locations.forEach((location) => {
+            var d1 = req.body.from_date.split("/");
+            var d2 = req.body.to_date.split("/");
+            var c = location.date.split("/");
+            var from = new Date(d1[2], parseInt(d1[1]) - 1, d1[0]); // -1 because months are from 0 to 11
+            //console.log(from);
+            var to = new Date(d2[2], parseInt(d2[1]) - 1, d2[0]);
+            var check = new Date(c[2], parseInt(c[1]) - 1, c[0]);
+            console.log(from.getDate(), to.getDate(), check.getDate());
+            if (check > from && check < to) {
+              console.log("Between");
+              selectedLocations.push(location);
+            } else if (
+              from.getDate() === check.getDate() ||
+              to.getDate() === check.getDate()
+            ) {
+              console.log("Equals");
+              selectedLocations.push(location);
+            } else {
+              console.log("Out of range");
+            }
+            console.log("###################################################");
+          });
+          console.log(selectedLocations.length);
+          return apiResponse.successResponseWithData(res,"locations get Success.", selectedLocations);
+        }
+        else{
+          return apiResponse.successResponseWithData(res,"No locations found", locations);
+        }
+      
+    });
+    }catch(err){
+    }
+  }
+];
+
+exports.getEmployeeLocationOnTimeRange = [
+  (req, res) => {
+    try{
+      EmployeeLocation.findOne({employee: req.body.employee, date: req.body.date}).then((location) => {
+        var selectedLocations = [];
+        if(location){
+            var timeFrom = "01/01/2011 " + req.body.time_from + ":00";
+            var timeTo = "01/01/2011 " + req.body.time_to + ":00";
+            location.locations.forEach((loc) => {
+              var check = "01/01/2011 " + loc.time + ":00";
+              if (
+                Date.parse(check) > Date.parse(timeFrom) &&
+                Date.parse(check) < Date.parse(timeTo)
+              ) {
+                selectedLocations.push(loc);
+              } else if (
+                Date.parse(check) === Date.parse(timeFrom) ||
+                Date.parse(check) === Date.parse(timeTo)
+              ) {
+                selectedLocations.push(loc);
+              } else {
+              }
+              //console.log(Date.parse(timeFrom), Date.parse(timeTo), Date.parse(check));
+            });
+          location.locations = selectedLocations;
+          return apiResponse.successResponseWithData(res,"locations get Success.", location);
+        }
+        else{
+          return apiResponse.successResponseWithData(res,"No locations found", locations);
+        }
+      
+    });
+    }catch(err){
+    }
+  }
+];
+
 exports.getEmployeeLastLocation = [
   (req, res) => {
     try{
@@ -76,6 +155,7 @@ exports.getEmployeeLastLocation = [
       var dateInString = date_ob.getDate()+"/"+(date_ob.getMonth()+1)+"/"+date_ob.getFullYear();
       EmployeeLocation.find({employee: req.body.employee, date: dateInString}).then((locations) => {
         if(locations.length !== 0){
+          
           return apiResponse.successResponseWithData(res,"locations get Success.", locations);
         }
         else{
@@ -151,6 +231,7 @@ exports.addUserLocation = [
 							fence.points.forEach((point)=> {
 								polygon.push(new Point(parseFloat(point.lat),parseFloat(point.lng)));
 							});
+             //console.log(polygon);
 						}
 					});
                     EmployeeLocation.find({
@@ -162,8 +243,8 @@ exports.addUserLocation = [
 						locations[0]['locations'].forEach((loc) => {
 							oldLocations.push(new LatLng(loc['lat'], loc['lng'], loc['time'], loc['inFence']))
 						});
-						var isInFence = isUserInFence(req.body.lat, req.body.lng, polygon);
-						console.log(isInFence);
+            console.log("Fetched Polygon: ",polygon);
+          var isInFence = isUserInFence(req.body.lat, req.body.lng, polygon);
 						oldLocations.push(new LatLng(req.body.lat, req.body.lng, req.body.time, isInFence));
 						var employeeLocation = new EmployeeLocation({
 							employee: req.user._id,
@@ -181,6 +262,8 @@ exports.addUserLocation = [
 						});
                       } else {
 						var userLocation = [];
+            console.log("Fetched Polygon: ",polygon);
+          var isInFence = isUserInFence(req.body.lat, req.body.lng, polygon);
 						userLocation.push(new LatLng(req.body.lat, req.body.lng, req.body.time, isInFence));
                         var employeeLocation = new EmployeeLocation({
                           employee: req.user._id,
@@ -190,7 +273,8 @@ exports.addUserLocation = [
                           user: assignFence.user,
                           locations: userLocation,
                         });
-						employeeLocation.save(function (err) {
+                        console.log(employeeLocation);
+                        employeeLocation.save(function (err) {
 							if (err) { return apiResponse.ErrorResponse(res, err); }
 							return apiResponse.successResponseWithData(res,"location added Success.", employeeLocation);
 						});

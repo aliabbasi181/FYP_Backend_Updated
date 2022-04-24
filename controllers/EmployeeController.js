@@ -51,7 +51,9 @@ exports.register = [
 							designation: req.body.designation,
 							confirmOTP: otp,
 							isConfirmed: true,
-                            user: req.user._id
+                            user: req.user._id,
+							active: true,
+							unactive_msg: "null"
 						}
 					);
                     console.log(employee)
@@ -125,5 +127,30 @@ exports.register = [
 				//throw error in json response with status 500. 
 				return apiResponse.ErrorResponse(res, err);
 			}
+		}
+	];
+
+
+	exports.changeActiveStatus = [
+		auth,
+		function (req, res){
+			try{
+				EmployeeModel.findOne({_id: req.body.id, user: req.user._id},"").then((employee)=>{                
+					if(employee !== null){
+						EmployeeModel.findByIdAndUpdate(employee._id, {'active': req.body.active, 'unactive_msg': req.body.msg}, {},function (err) {
+							if (err) { 
+								return apiResponse.ErrorResponse(res, err); 
+							}else{
+								employee.unactive_msg = req.body.msg;
+								employee.active = req.body.active;
+								return apiResponse.successResponseWithData(res, "Updated Success", employee);
+							}
+						});
+						//return apiResponse.successResponseWithData(res, "Operation success", employee);
+					}else{
+						return apiResponse.successResponseWithData(res, "Employee not found", {});
+					}
+				});
+			}catch(err){}
 		}
 	];

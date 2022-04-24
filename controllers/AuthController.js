@@ -86,7 +86,7 @@ exports.register = [
 							role: "organization",
 							phone: req.body.phone,
 							confirmOTP: otp,
-							isConfirmed: true
+							isConfirmed: req.body.isConfirmed
 						}
 					);
 					// Html email body

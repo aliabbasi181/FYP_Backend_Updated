@@ -8,8 +8,11 @@ router.get("/get-employees-last-location", EmployeeLocationController.getAllEmpl
 router.post("/register", EmployeeController.register);
 router.get("/employeeDetail", EmployeeController.employeeDetail);
 router.get("/", EmployeeController.employeeList);
+router.post("/change-active-status", EmployeeController.changeActiveStatus);
 router.post("/addLocation", EmployeeLocationController.addUserLocation);
 router.post("/get-employee-location-on-date", EmployeeLocationController.getEmployeeLocationOnDate);
+router.post("/get-employee-location-on-two-dates", EmployeeLocationController.getEmployeeLocationOnTwoDate);
+router.post("/get-employee-location-on-time-range", EmployeeLocationController.getEmployeeLocationOnTimeRange);
 router.post("/get-last-location-employee", EmployeeLocationController.getEmployeeLastLocation);
 // router.put("/:id", BookController.bookUpdate);
 // router.delete("/:id", BookController.bookDelete);

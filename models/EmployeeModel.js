@@ -11,6 +11,8 @@ var EmployeeSchema = new mongoose.Schema({
 	designation: {type: String},
 	gender: {type: String},
 	address: {type: String},
+	unactive_msg: {type: String},
+	active: {type: Boolean},
 	isConfirmed: {type: Boolean, required: true, default: 0},
 	confirmOTP: {type: String, required:false},
 	otpTries: {type: Number, required:false, default: 0},
