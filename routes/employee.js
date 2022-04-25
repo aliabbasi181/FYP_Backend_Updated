@@ -13,6 +13,7 @@ router.post("/addLocation", EmployeeLocationController.addUserLocation);
 router.post("/get-employee-location-on-date", EmployeeLocationController.getEmployeeLocationOnDate);
 router.post("/get-employee-location-on-two-dates", EmployeeLocationController.getEmployeeLocationOnTwoDate);
 router.post("/get-employee-location-on-time-range", EmployeeLocationController.getEmployeeLocationOnTimeRange);
+router.post("/get-employee-location-on-date-and-time-range", EmployeeLocationController.getEmployeeLocationOnDateAndTimeRange);
 router.post("/get-last-location-employee", EmployeeLocationController.getEmployeeLastLocation);
 // router.put("/:id", BookController.bookUpdate);
 // router.delete("/:id", BookController.bookDelete);

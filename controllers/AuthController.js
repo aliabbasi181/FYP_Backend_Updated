@@ -22,6 +22,31 @@ const auth = require("../middlewares/jwt");
  * @returns {Object}
  */
 
+
+ exports.changeOrgStatus = [
+	function (req, res){
+		try{
+			UserModel.findOne({_id: req.body.id},"").then((organization)=>{                
+				if(organization !== null){
+					UserModel.findByIdAndUpdate(organization._id, {'isConfirmed': req.body.active}, {},function (err) {
+						if (err) { 
+							return apiResponse.ErrorResponse(res, err); 
+						}else{
+							organization.isConfirmed = req.body.active;
+							return apiResponse.successResponseWithData(res, "Updated Success", organization);
+						}
+					});
+					//return apiResponse.successResponseWithData(res, "Operation success", employee);
+				}else{
+					return apiResponse.successResponseWithData(res, "Organization not found", {});
+				}
+			});
+		}catch(err){}
+	}
+];
+
+
+
  exports.getUserData = [
 	auth, 
 	(req, res) => {
@@ -249,6 +274,8 @@ exports.login = [
 											gender: employee.gender,
 											address: employee.address,
 											email: employee.email,
+											status: employee.status,
+											unactive_msg: employee.unactive_msg
 										};
 										//Prepare JWT token for authentication
 										const jwtPayload = userData;

@@ -230,6 +230,42 @@ exports.getAssignedFences = [
 	}
 ];
 
+function sleep(ms) {
+	return new Promise((resolve) => {
+	  setTimeout(resolve, ms);
+	});
+  }
+
+exports.getEmployeesAssignedFences = [
+	auth, 
+	(req, res) => {
+		try{
+			AssignPolygon.find({region: req.body.id, user: req.user._id}).then(async (data) => {
+				if(data != null){
+					var empList = [];
+					data.forEach((item) => {
+						EmployeeModel.findOne({_id: item.employee}).then((employee) => {
+							console.log("hiii")
+							if(employee){
+								empList.push(employee);
+							}
+							console.log(empList.length);
+						});
+					});
+					await sleep(1500)
+					console.log(empList);
+					return apiResponse.successResponseWithData(res, "Success", empList);
+				}
+				else{
+					return apiResponse.successResponseWithData(res, "No data");
+				}
+			});
+		}catch(ex){
+			return apiResponse.ErrorResponse(res, err);
+		}
+	}
+];
+
 const UserLocationData = class {
 	constructor(lat, lng, fenceId, fenceName, inFence, employeeId, employeeName){
 		this.lat = lat;

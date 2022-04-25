@@ -11,6 +11,7 @@ router.post("/assign-fence", PolygonController.polygonAssign);
 router.post("/update", PolygonController.polygonUpdate);
 router.delete("/", PolygonController.polygonDelete);
 router.get("/get-assigned-fences", PolygonController.getAssignedFences);
+router.post("/get-employees-assigned-fence", PolygonController.getEmployeesAssignedFences);
 // router.get("/status", GeoController.checkUserFenseStatus);
 
 module.exports = router;

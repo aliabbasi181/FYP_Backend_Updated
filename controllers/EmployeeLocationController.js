@@ -148,6 +148,67 @@ exports.getEmployeeLocationOnTimeRange = [
   }
 ];
 
+exports.getEmployeeLocationOnDateAndTimeRange = [
+  (req, res) => {
+    try{
+      EmployeeLocation.find({employee: req.body.employee}).then((locations) => {
+        var selectedLocations = [];
+        if(locations.length !== 0){
+          var dateValid = false;
+          locations.forEach((location) => {
+            var d1 = req.body.from_date.split("/");
+            var d2 = req.body.to_date.split("/");
+            var c = location.date.split("/");
+            var from = new Date(d1[2], parseInt(d1[1]) - 1, d1[0]);
+            var to = new Date(d2[2], parseInt(d2[1]) - 1, d2[0]);
+            var check = new Date(c[2], parseInt(c[1]) - 1, c[0]);
+            
+            if (check > from && check < to) {
+              dateValid = true;
+            } else if (
+              from.getDate() === check.getDate() ||
+              to.getDate() === check.getDate()
+            ) {
+              dateValid = true;
+            } else {
+              dateValid = false;
+            }
+            console.log(dateValid);
+            if(dateValid){
+              var tempLocation = [];
+              var timeFrom = "01/01/2011 " + req.body.time_from + ":00";
+              var timeTo = "01/01/2011 " + req.body.time_to + ":00";
+              location.locations.forEach((loc) => {
+              var check = "01/01/2011 " + loc.time + ":00";
+              if (
+                Date.parse(check) > Date.parse(timeFrom) &&
+                Date.parse(check) < Date.parse(timeTo)
+              ) {
+                tempLocation.push(loc);
+              } else if (
+                Date.parse(check) === Date.parse(timeFrom) ||
+                Date.parse(check) === Date.parse(timeTo)
+              ) {
+                tempLocation.push(loc);
+              } else {
+              }
+            });
+            location.locations = tempLocation;
+            selectedLocations.push(location);
+            }
+          });
+          return apiResponse.successResponseWithData(res,"locations get Success.", selectedLocations);
+        }
+        else{
+          return apiResponse.successResponseWithData(res,"No locations found", locations);
+        }
+      
+    });
+    }catch(err){
+    }
+  }
+];
+
 exports.getEmployeeLastLocation = [
   (req, res) => {
     try{
@@ -168,6 +229,11 @@ exports.getEmployeeLastLocation = [
   }
 ];
 
+function sleep(ms) {
+	return new Promise((resolve) => {
+	  setTimeout(resolve, ms);
+	});
+  }
 
 exports.addUserLocation = [
   auth,
@@ -184,7 +250,7 @@ exports.addUserLocation = [
         var datesMatched = false;
         var timeMatched = false;
         AssignPolygon.find({ employee: req.user._id }, "").then(
-          (assignFences) => {
+         (assignFences) => {
 			  //console.log(assignFences)
             if (assignFences.length > 0) {
               assignFences.forEach((assignFence) => {
@@ -234,15 +300,17 @@ exports.addUserLocation = [
              //console.log(polygon);
 						}
 					});
+          
                     EmployeeLocation.find({
                       date: req.body.date,
 					  assignFenceId: assignFence._id
-                    }).then((locations) => {
+                    }).then(async (locations) => {
                       if (locations.length > 0) {
 						var oldLocations = [];
 						locations[0]['locations'].forEach((loc) => {
 							oldLocations.push(new LatLng(loc['lat'], loc['lng'], loc['time'], loc['inFence']))
 						});
+            await sleep(1000);
             console.log("Fetched Polygon: ",polygon);
           var isInFence = isUserInFence(req.body.lat, req.body.lng, polygon);
 						oldLocations.push(new LatLng(req.body.lat, req.body.lng, req.body.time, isInFence));

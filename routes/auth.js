@@ -8,5 +8,7 @@ router.post("/login", AuthController.login);
 router.get("/organizations", AuthController.organizationList);
 router.delete("/delete", AuthController.organizationDelete);
 router.get("/get-user-data", AuthController.getUserData);
+router.post("/change-org-status", AuthController.changeOrgStatus);
+
 
 module.exports = router;
