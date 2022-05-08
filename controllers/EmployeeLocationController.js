@@ -69,13 +69,21 @@ exports.getEmployeeLocationOnDate = [
   }
 ];
 
+class LocationHistoryData{
+  constructor(location, fence){
+    this.location = location;
+    this.fence = fence;
+  }
+}
+
+
 exports.getEmployeeLocationOnTwoDate = [
   (req, res) => {
     try{
-      EmployeeLocation.find({employee: req.body.employee}).then((locations) => {
+      EmployeeLocation.find({employee: req.body.employee}).then(async (locations) => {
         var selectedLocations = [];
         if(locations.length !== 0){
-          locations.forEach((location) => {
+          locations.forEach(async (location) => {
             var d1 = req.body.from_date.split("/");
             var d2 = req.body.to_date.split("/");
             var c = location.date.split("/");
@@ -86,19 +94,41 @@ exports.getEmployeeLocationOnTwoDate = [
             console.log(from.getDate(), to.getDate(), check.getDate());
             if (check > from && check < to) {
               console.log("Between");
-              selectedLocations.push(location);
+              var polygonData;
+              Polygon.findOne({_id: location.fence}).then((polygon)=>{                
+                if(polygon !== null){
+                  polygonData = polygon;
+                }else{
+                }
+              });
+              await sleep(100);
+              let data = new LocationHistoryData(location, polygonData);
+              //console.log(data);
+              selectedLocations.push(data);
+              
             } else if (
               from.getDate() === check.getDate() ||
               to.getDate() === check.getDate()
             ) {
               console.log("Equals");
-              selectedLocations.push(location);
+              var polygonData;
+              Polygon.findOne({_id: location.fence}).then((polygon)=>{                
+                if(polygon !== null){
+                  polygonData = polygon;
+                }else{
+                }
+              });
+              await sleep(100);
+              let data = new LocationHistoryData(location, polygonData);
+              //console.log(data);
+              selectedLocations.push(data);
             } else {
               console.log("Out of range");
             }
             console.log("###################################################");
           });
-          console.log(selectedLocations.length);
+          await sleep(1000);
+          console.log(selectedLocations);
           return apiResponse.successResponseWithData(res,"locations get Success.", selectedLocations);
         }
         else{
@@ -114,7 +144,7 @@ exports.getEmployeeLocationOnTwoDate = [
 exports.getEmployeeLocationOnTimeRange = [
   (req, res) => {
     try{
-      EmployeeLocation.findOne({employee: req.body.employee, date: req.body.date}).then((location) => {
+      EmployeeLocation.findOne({employee: req.body.employee, date: req.body.date}).then(async (location) => {
         var selectedLocations = [];
         if(location){
             var timeFrom = "01/01/2011 " + req.body.time_from + ":00";
@@ -136,7 +166,16 @@ exports.getEmployeeLocationOnTimeRange = [
               //console.log(Date.parse(timeFrom), Date.parse(timeTo), Date.parse(check));
             });
           location.locations = selectedLocations;
-          return apiResponse.successResponseWithData(res,"locations get Success.", location);
+          var polygonData;
+          Polygon.findOne({_id: location.fence}).then((polygon)=>{                
+            if(polygon !== null){
+              polygonData = polygon;
+            }else{
+            }
+          });
+          await sleep(100);
+          let data = new LocationHistoryData(location, polygonData);
+          return apiResponse.successResponseWithData(res,"locations get Success.", data);
         }
         else{
           return apiResponse.successResponseWithData(res,"No locations found", locations);
@@ -310,7 +349,7 @@ exports.addUserLocation = [
 						locations[0]['locations'].forEach((loc) => {
 							oldLocations.push(new LatLng(loc['lat'], loc['lng'], loc['time'], loc['inFence']))
 						});
-            await sleep(1000);
+            await sleep(100);
             console.log("Fetched Polygon: ",polygon);
           var isInFence = isUserInFence(req.body.lat, req.body.lng, polygon);
 						oldLocations.push(new LatLng(req.body.lat, req.body.lng, req.body.time, isInFence));
