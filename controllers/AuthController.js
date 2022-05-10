@@ -52,7 +52,7 @@ const auth = require("../middlewares/jwt");
 	(req, res) => {
 		try{
 			if(req.user.role == "organization"){
-				UserModel.find({_id: req.user._id}).then((data) => {
+				UserModel.findOne({_id: req.user._id}).then((data) => {
 					if(data != null){
 						return apiResponse.successResponseWithData(res, "Success", data);
 					}
@@ -62,7 +62,7 @@ const auth = require("../middlewares/jwt");
 				});
 			}
 			else{
-				EmployeeModel.find({_id: req.user._id}).then((data) => {
+				EmployeeModel.findOne({_id: req.user._id}).then((data) => {
 					if(data != null){
 						return apiResponse.successResponseWithData(res, "Success", data);
 					}

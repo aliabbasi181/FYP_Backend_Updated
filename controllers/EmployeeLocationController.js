@@ -8,6 +8,7 @@ mongoose.set("useFindAndModify", false);
 const AssignPolygon = require("../models/AssignRegionModel");
 const FenceModel = require("../models/PolygonModel");
 const Polygon = require("../models/PolygonModel");
+const EmployeeModel = require("../models/EmployeeModel");
 
 const LatLng = class {
 	constructor(lat, lng, time, inFence){
@@ -187,6 +188,18 @@ exports.getEmployeeLocationOnTimeRange = [
   }
 ];
 
+exports.getEmployeeLocationOnFenceId = [
+  (req, res) => {
+    try{
+      EmployeeLocation.find({fence: req.body.id, date: req.body.date}).then(async (locations) => {
+        return apiResponse.successResponseWithData(res,"locations get Success.", locations);
+      
+    });
+    }catch(err){
+    }
+  }
+];
+
 exports.getEmployeeLocationOnDateAndTimeRange = [
   (req, res) => {
     try{
@@ -273,6 +286,18 @@ function sleep(ms) {
 	  setTimeout(resolve, ms);
 	});
   }
+
+exports.getEmployeeById = [
+  (req, res) => {
+    try{
+      EmployeeModel.findById({_id: req.body.id}).then((employee) => {
+        if(employee){
+          return apiResponse.successResponseWithData(res,"employee get Success.", employee);
+        }
+      });
+    }catch(err){}
+  }
+];
 
 exports.addUserLocation = [
   auth,
