@@ -4,7 +4,7 @@ const EmployeeLocationController = require("../controllers/EmployeeLocationContr
 
 var router = express.Router();
 
-router.get("/get-employees-last-location", EmployeeLocationController.getAllEmployeesLastLocation);
+router.post("/get-employees-last-location", EmployeeLocationController.getAllEmployeesLastLocation);
 router.post("/register", EmployeeController.register);
 router.get("/employeeDetail", EmployeeController.employeeDetail);
 router.get("/", EmployeeController.employeeList);

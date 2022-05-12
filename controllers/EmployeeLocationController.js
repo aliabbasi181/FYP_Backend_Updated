@@ -20,11 +20,12 @@ const LatLng = class {
 };
 
 const UserLocationData = class {
-	constructor(lat, lng, fenceId, inFence, employeeId){
+	constructor(lat, lng, fenceId, inFence, date, employeeId){
 		this.lat = lat;
 		this.lng = lng;
     this.fenceId = fenceId;
     this.inFence = inFence;
+    this.date = date;
 		this.employeeId = employeeId;
 	}
 };
@@ -34,11 +35,12 @@ exports.getAllEmployeesLastLocation = [
   (req, res) => {
     try{
       var data = [];
-      EmployeeLocation.find({user: req.user._id}).then((locations) => {
+      console.log(req.body.date);
+      EmployeeLocation.find({user: req.user._id, date: req.body.date}).then((locations) => {
         if(locations.length !== 0){
           locations.forEach(element => {
             data.push(
-              new UserLocationData(element.locations[element.locations.length-1].lat, element.locations[element.locations.length-1].lng, element.fence, element.locations[element.locations.length-1].inFence, element.employee)
+              new UserLocationData(element.locations[element.locations.length-1].lat, element.locations[element.locations.length-1].lng, element.fence, element.locations[element.locations.length-1].inFence, element.date, element.employee)
             );
           });
           console.log(data);
@@ -81,6 +83,7 @@ class LocationHistoryData{
 exports.getEmployeeLocationOnTwoDate = [
   (req, res) => {
     try{
+      console.log(req.body.employee);
       EmployeeLocation.find({employee: req.body.employee}).then(async (locations) => {
         var selectedLocations = [];
         if(locations.length !== 0){
