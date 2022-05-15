@@ -202,6 +202,16 @@ exports.getEmployeeLocationOnFenceId = [
     }
   }
 ];
+exports.getEmployeeAllLocations = [
+  (req, res) => {
+    try{
+      EmployeeLocation.find({employee: req.body.id}).then(async (locations) => {
+        return apiResponse.successResponseWithData(res,"locations get Success.", locations);
+    });
+    }catch(err){
+    }
+  }
+];
 
 exports.getEmployeeLocationOnDateAndTimeRange = [
   (req, res) => {
