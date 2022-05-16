@@ -95,6 +95,7 @@ exports.polygonStore = [
 					user: req.user,
 					points: req.body.points
 				});
+				console.log(polygon);
 			if (!errors.isEmpty()) {
 				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
 			}
@@ -133,12 +134,9 @@ exports.polygonAssign = [
 				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
 			}
 			else {
-				console.log(assignRegion);
 				EmployeeModel.findOne({_id: assignRegion.employee}).then((user) => {
-					console.log(user);
 					if(user != null){
 						EmployeeModel.findOne({user: req.user}).then((data) => {
-							console.log(data);
 							if(data != null){
 								Polygon.findOne({_id: assignRegion.region}).then((polygon) => {
 									if(polygon != null){
@@ -151,7 +149,7 @@ exports.polygonAssign = [
 													region: assignRegion.region,
 												},
 												{
-													date: assignRegion.date,
+													dateFrom: assignRegion.dateFrom,
 												},
 												{
 													startTime: assignRegion.startTime,
@@ -162,32 +160,95 @@ exports.polygonAssign = [
 											]
 										}).then((assignedFence) =>{
 											if(assignedFence == null){
-												assignRegion.save(
-													function(err){
-														if (err) { return apiResponse.ErrorResponse(res, err); }
-														let assignedRegionData = new AssignRegionModel(assignRegion);
-														return apiResponse.successResponseWithData(res,"Fence assigned successfuly.", assignedRegionData);
-													}
-												);
+												AssignPolygon.find({employee: assignRegion.employee}).then((fences) => {
+													console.log("###############################");
+													//console.log(assignRegion.employee, assignRegion.dateFrom);
+													//console.log(fences);
+													fences.forEach(fence => {
+														// dates
+														var dateFrom = fence.dateFrom+"";
+														var dateTo = fence.dateTo+"";
+														var dateCheckFrom = req.body.date_from+"";
+														var dateCheckTo = req.body.date_to+"";
+														var d1 = dateFrom.split("/");
+														var d2 = dateTo.split("/");
+														var cF = dateCheckFrom.split("/");
+														var cT = dateCheckTo.split("/");
+														var from = new Date(d1[2], parseInt(d1[1]) - 1, d1[0]); // -1 because months are from 0 to 11
+														var to = new Date(d2[2], parseInt(d2[1]) - 1, d2[0]);
+														var checkFrom = new Date(cF[2], parseInt(cF[1]) - 1, cF[0]);
+														var checkTo = new Date(cT[2], parseInt(cT[1]) - 1, cT[0]);
+														console.log(from, checkFrom, to, checkTo);
+														// times
+														var timeFrom = "01/01/2011 " + fence.startTime + ":00";
+														var timeTo = "01/01/2011 " + fence.endTime + ":00";
+														var timeCheckFrom = "01/01/2011 " + req.body.start_time + ":00";
+														var timeCheckTo = "01/01/2011 " + req.body.end_time + ":00";
+														console.log(timeFrom, timeCheckFrom, timeTo, timeCheckTo);
+														// checks
+														if(checkFrom.getDate() === from.getDate() && checkTo.getDate() === to.getDate()){
+															console.log("equal dates");
+															if((timeCheckFrom === timeFrom && timeCheckTo === timeTo) || (Date.parse(timeCheckFrom) > Date.parse(timeFrom) && Date.parse(timeCheckTo) < Date.parse(timeTo)) || (Date.parse(timeCheckFrom) >= Date.parse(timeFrom) && Date.parse(timeCheckFrom) <= Date.parse(timeTo)) || (Date.parse(timeCheckTo) >= Date.parse(timeFrom) && Date.parse(timeCheckTo) <= Date.parse(timeTo)) || (Date.parse(timeCheckFrom) <= Date.parse(timeFrom) && Date.parse(timeCheckTo) >= Date.parse(timeTo))){
+																console.log("equal or in between dates and time");
+																return apiResponse.successResponseWithData(res, "This date and time slot is already assigned.");
+															}
+														}
+														else if ((checkFrom.getDate() > from.getDate() && checkTo.getDate() < to.getDate())){
+															console.log("Between dates");
+															if((timeCheckFrom === timeFrom && timeCheckTo === timeTo) || (Date.parse(timeCheckFrom) > Date.parse(timeFrom) && Date.parse(timeCheckTo) < Date.parse(timeTo)) || (Date.parse(timeCheckFrom) >= Date.parse(timeFrom) && Date.parse(timeCheckFrom) <= Date.parse(timeTo)) || (Date.parse(timeCheckTo) >= Date.parse(timeFrom) && Date.parse(timeCheckTo) <= Date.parse(timeTo)) || (Date.parse(timeCheckFrom) <= Date.parse(timeFrom) && Date.parse(timeCheckTo) >= Date.parse(timeTo))){
+																console.log("equal or in between dates and time > <");
+																return apiResponse.successResponseWithData(res, "This date and time slot is already assigned.");
+															}
+														}
+														else if ((checkFrom.getDate() >= from.getDate() && checkFrom.getDate() <= to.getDate())){
+															console.log("Check from Between dates");
+															if((timeCheckFrom === timeFrom && timeCheckTo === timeTo) || (Date.parse(timeCheckFrom) > Date.parse(timeFrom) && Date.parse(timeCheckTo) < Date.parse(timeTo)) || (Date.parse(timeCheckFrom) >= Date.parse(timeFrom) && Date.parse(timeCheckFrom) <= Date.parse(timeTo)) || (Date.parse(timeCheckTo) >= Date.parse(timeFrom) && Date.parse(timeCheckTo) <= Date.parse(timeTo)) || (Date.parse(timeCheckFrom) <= Date.parse(timeFrom) && Date.parse(timeCheckTo) >= Date.parse(timeTo))){
+																console.log("equal or in between dates and time From <= <=");
+																return apiResponse.successResponseWithData(res, "This date and time slot is already assigned.");
+															}
+														}
+														else if ((checkTo.getDate() >= from.getDate() && checkTo.getDate() <= to.getDate())){
+															console.log("Check to Between dates");
+															if((timeCheckFrom === timeFrom && timeCheckTo === timeTo) || (Date.parse(timeCheckFrom) > Date.parse(timeFrom) && Date.parse(timeCheckTo) < Date.parse(timeTo)) || (Date.parse(timeCheckFrom) >= Date.parse(timeFrom) && Date.parse(timeCheckFrom) <= Date.parse(timeTo)) || (Date.parse(timeCheckTo) >= Date.parse(timeFrom) && Date.parse(timeCheckTo) <= Date.parse(timeTo)) || (Date.parse(timeCheckFrom) <= Date.parse(timeFrom) && Date.parse(timeCheckTo) >= Date.parse(timeTo))){
+																console.log("equal or in between dates and time To >= <=");
+																return apiResponse.successResponseWithData(res, "This date and time slot is already assigned.");
+															}
+														}
+														else if ((checkFrom.getDate() <= from.getDate() && checkTo.getDate() >= to.getDate())){
+															console.log("Out of dates");
+															if((timeCheckFrom === timeFrom && timeCheckTo === timeTo) || (Date.parse(timeCheckFrom) > Date.parse(timeFrom) && Date.parse(timeCheckTo) < Date.parse(timeTo)) || (Date.parse(timeCheckFrom) >= Date.parse(timeFrom) && Date.parse(timeCheckFrom) <= Date.parse(timeTo)) || (Date.parse(timeCheckTo) >= Date.parse(timeFrom) && Date.parse(timeCheckTo) <= Date.parse(timeTo)) || (Date.parse(timeCheckFrom) <= Date.parse(timeFrom) && Date.parse(timeCheckTo) >= Date.parse(timeTo))){
+																console.log("equal or in between dates and time <= >=");
+																return apiResponse.successResponseWithData(res, "This date and time slot is already assigned.");
+															}
+														}
+													});
+													assignRegion.save(
+														function(err){
+															if (err) { return apiResponse.ErrorResponse(res, err); }
+															let assignedRegionData = new AssignRegionModel(assignRegion);
+															return apiResponse.successResponseWithData(res,"Fence assigned successfuly.", assignedRegionData);
+														}
+													);
+												});
 											}
 											else{
-												return apiResponse.ErrorResponse(res, "Same date, startTime, endTime are alredy assigned to this employee");
+												return apiResponse.successResponseWithData(res, "Same date, startTime, endTime are alredy assigned to this employee");
 											}
 										});
 									}
 									else{
-										return apiResponse.ErrorResponse(res, "Fence with this id not found");
+										return apiResponse.successResponseWithData(res, "Fence with this id not found");
 									}
 								});
 							}
 							else{
 								console.log("error");
-								return apiResponse.ErrorResponse(res, "This employee does not belongs to you.");
+								return apiResponse.successResponseWithData(res, "This employee does not belongs to you.");
 							}
 						});
 					}
 					else{
-						return apiResponse.ErrorResponse(res, "Employee with this id not found");
+						return apiResponse.successResponseWithData(res, "Employee with this id not found");
 					}
 				});
 			}
