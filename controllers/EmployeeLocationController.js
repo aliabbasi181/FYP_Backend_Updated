@@ -30,6 +30,33 @@ const UserLocationData = class {
 	}
 };
 
+class FenceHistory{
+  constructor(location, employee){
+    this.locations = location;
+    this.employee = employee;
+  }
+}
+
+
+// fence history
+
+exports.getFenceHistory = [
+  (req, res) => {
+    try{
+      var data = [];
+      EmployeeLocation.find({fence: req.body.id}).then((locations) => {
+        if(locations.length !== 0){
+          return apiResponse.successResponseWithData(res,"locations get Success.", locations);
+        }
+        else{
+          return apiResponse.successResponseWithData(res,"no locations found", data);
+        }
+      });
+    }catch(err){
+    }
+  }
+];
+
 exports.getAllEmployeesLastLocation = [
   auth,
   (req, res) => {
@@ -387,7 +414,7 @@ exports.addUserLocation = [
 						locations[0]['locations'].forEach((loc) => {
 							oldLocations.push(new LatLng(loc['lat'], loc['lng'], loc['time'], loc['inFence']))
 						});
-            await sleep(100);
+            await sleep(500);
             console.log("Fetched Polygon: ",polygon);
           var isInFence = isUserInFence(req.body.lat, req.body.lng, polygon);
 						oldLocations.push(new LatLng(req.body.lat, req.body.lng, req.body.time, isInFence));

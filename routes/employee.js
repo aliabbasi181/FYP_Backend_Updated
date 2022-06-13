@@ -18,6 +18,7 @@ router.post("/get-employee-location-on-date-and-time-range", EmployeeLocationCon
 router.post("/get-last-location-employee", EmployeeLocationController.getEmployeeLastLocation);
 router.post("/get-employees-locations-on-fence-id", EmployeeLocationController.getEmployeeLocationOnFenceId);
 router.post("/get-employee-all-locations", EmployeeLocationController.getEmployeeAllLocations);
+router.post("/fence-history", EmployeeLocationController.getFenceHistory);
 // router.put("/:id", BookController.bookUpdate);
 // router.delete("/:id", BookController.bookDelete);
 // router.get("/status", GeoController.checkUserFenseStatus);

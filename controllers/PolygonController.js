@@ -20,6 +20,8 @@ class LatLng{
     }
 }
 
+
+
 function PolygonData(data) {
 	this.id = data._id;
 	this.name= data.name;
@@ -114,6 +116,14 @@ exports.polygonStore = [
 	}
 ];
 
+function sleep(ms) {
+	return new Promise((resolve) => {
+	  setTimeout(resolve, ms);
+	});
+  }
+
+  
+
 exports.polygonAssign = [
 	auth,
 	(req, res) => {
@@ -160,10 +170,11 @@ exports.polygonAssign = [
 											]
 										}).then((assignedFence) =>{
 											if(assignedFence == null){
-												AssignPolygon.find({employee: assignRegion.employee}).then((fences) => {
+												AssignPolygon.find({employee: assignRegion.employee}).then(async (fences) => {
 													console.log("###############################");
 													//console.log(assignRegion.employee, assignRegion.dateFrom);
-													//console.log(fences);
+													console.log(fences);
+													let allow = true;
 													fences.forEach(fence => {
 														// dates
 														var dateFrom = fence.dateFrom+"";
@@ -190,6 +201,7 @@ exports.polygonAssign = [
 															console.log("equal dates");
 															if((timeCheckFrom === timeFrom && timeCheckTo === timeTo) || (Date.parse(timeCheckFrom) > Date.parse(timeFrom) && Date.parse(timeCheckTo) < Date.parse(timeTo)) || (Date.parse(timeCheckFrom) >= Date.parse(timeFrom) && Date.parse(timeCheckFrom) <= Date.parse(timeTo)) || (Date.parse(timeCheckTo) >= Date.parse(timeFrom) && Date.parse(timeCheckTo) <= Date.parse(timeTo)) || (Date.parse(timeCheckFrom) <= Date.parse(timeFrom) && Date.parse(timeCheckTo) >= Date.parse(timeTo))){
 																console.log("equal or in between dates and time");
+																allow = false;
 																return apiResponse.successResponseWithData(res, "This date and time slot is already assigned.");
 															}
 														}
@@ -197,6 +209,7 @@ exports.polygonAssign = [
 															console.log("Between dates");
 															if((timeCheckFrom === timeFrom && timeCheckTo === timeTo) || (Date.parse(timeCheckFrom) > Date.parse(timeFrom) && Date.parse(timeCheckTo) < Date.parse(timeTo)) || (Date.parse(timeCheckFrom) >= Date.parse(timeFrom) && Date.parse(timeCheckFrom) <= Date.parse(timeTo)) || (Date.parse(timeCheckTo) >= Date.parse(timeFrom) && Date.parse(timeCheckTo) <= Date.parse(timeTo)) || (Date.parse(timeCheckFrom) <= Date.parse(timeFrom) && Date.parse(timeCheckTo) >= Date.parse(timeTo))){
 																console.log("equal or in between dates and time > <");
+																allow = false;
 																return apiResponse.successResponseWithData(res, "This date and time slot is already assigned.");
 															}
 														}
@@ -204,6 +217,7 @@ exports.polygonAssign = [
 															console.log("Check from Between dates");
 															if((timeCheckFrom === timeFrom && timeCheckTo === timeTo) || (Date.parse(timeCheckFrom) > Date.parse(timeFrom) && Date.parse(timeCheckTo) < Date.parse(timeTo)) || (Date.parse(timeCheckFrom) >= Date.parse(timeFrom) && Date.parse(timeCheckFrom) <= Date.parse(timeTo)) || (Date.parse(timeCheckTo) >= Date.parse(timeFrom) && Date.parse(timeCheckTo) <= Date.parse(timeTo)) || (Date.parse(timeCheckFrom) <= Date.parse(timeFrom) && Date.parse(timeCheckTo) >= Date.parse(timeTo))){
 																console.log("equal or in between dates and time From <= <=");
+																allow = false;
 																return apiResponse.successResponseWithData(res, "This date and time slot is already assigned.");
 															}
 														}
@@ -211,6 +225,7 @@ exports.polygonAssign = [
 															console.log("Check to Between dates");
 															if((timeCheckFrom === timeFrom && timeCheckTo === timeTo) || (Date.parse(timeCheckFrom) > Date.parse(timeFrom) && Date.parse(timeCheckTo) < Date.parse(timeTo)) || (Date.parse(timeCheckFrom) >= Date.parse(timeFrom) && Date.parse(timeCheckFrom) <= Date.parse(timeTo)) || (Date.parse(timeCheckTo) >= Date.parse(timeFrom) && Date.parse(timeCheckTo) <= Date.parse(timeTo)) || (Date.parse(timeCheckFrom) <= Date.parse(timeFrom) && Date.parse(timeCheckTo) >= Date.parse(timeTo))){
 																console.log("equal or in between dates and time To >= <=");
+																allow = false;
 																return apiResponse.successResponseWithData(res, "This date and time slot is already assigned.");
 															}
 														}
@@ -218,17 +233,21 @@ exports.polygonAssign = [
 															console.log("Out of dates");
 															if((timeCheckFrom === timeFrom && timeCheckTo === timeTo) || (Date.parse(timeCheckFrom) > Date.parse(timeFrom) && Date.parse(timeCheckTo) < Date.parse(timeTo)) || (Date.parse(timeCheckFrom) >= Date.parse(timeFrom) && Date.parse(timeCheckFrom) <= Date.parse(timeTo)) || (Date.parse(timeCheckTo) >= Date.parse(timeFrom) && Date.parse(timeCheckTo) <= Date.parse(timeTo)) || (Date.parse(timeCheckFrom) <= Date.parse(timeFrom) && Date.parse(timeCheckTo) >= Date.parse(timeTo))){
 																console.log("equal or in between dates and time <= >=");
+																allow = false;
 																return apiResponse.successResponseWithData(res, "This date and time slot is already assigned.");
 															}
 														}
 													});
-													assignRegion.save(
-														function(err){
-															if (err) { return apiResponse.ErrorResponse(res, err); }
-															let assignedRegionData = new AssignRegionModel(assignRegion);
-															return apiResponse.successResponseWithData(res,"Fence assigned successfuly.", assignedRegionData);
-														}
-													);
+													sleep(1000);
+													if(allow){
+														assignRegion.save(
+															function(err){
+																if (err) { return apiResponse.ErrorResponse(res, err); }
+																let assignedRegionData = new AssignRegionModel(assignRegion);
+																return apiResponse.successResponseWithData(res,"Fence assigned successfuly.", assignedRegionData);
+															}
+														);
+													}
 												});
 											}
 											else{
@@ -297,6 +316,15 @@ function sleep(ms) {
 	});
   }
 
+  const EmployeeAssignFence = class{
+	  constructor(employee, assignFence){
+		  this.employee = employee;
+		  this.assignFence = assignFence;
+	  }
+  }
+
+
+
 exports.getEmployeesAssignedFences = [
 	auth, 
 	(req, res) => {
@@ -306,15 +334,12 @@ exports.getEmployeesAssignedFences = [
 					var empList = [];
 					data.forEach((item) => {
 						EmployeeModel.findOne({_id: item.employee}).then((employee) => {
-							console.log("hiii")
 							if(employee){
-								empList.push(employee);
+								empList.push(new EmployeeAssignFence(employee, item));
 							}
-							console.log(empList.length);
 						});
 					});
 					await sleep(1500)
-					console.log(empList);
 					return apiResponse.successResponseWithData(res, "Success", empList);
 				}
 				else{

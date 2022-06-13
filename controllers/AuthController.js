@@ -232,6 +232,7 @@ exports.login = [
 											_id: user._id,
 											name: user.name,
 											cnic: user.cnic,
+											isConfirmed: user.isConfirmed,
 											designation: user.designation,
 											role: user.role,
 											phone: user.phone,
