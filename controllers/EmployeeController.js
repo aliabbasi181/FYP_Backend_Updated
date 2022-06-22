@@ -111,6 +111,34 @@ exports.register = [
 		}
 	];
 
+	exports.employeeUpdate = [
+		auth,
+		(req, res) => {
+			console.log(req.user._id);
+			//return apiResponse.successResponseWithData(res, "Current locations of employees");
+			try {
+				EmployeeModel.findById(req.user._id, function (err, foundUser){
+					if(foundUser != null){
+						console.log(foundUser);
+						EmployeeModel.findByIdAndUpdate(req.user._id, {'name': req.body.name, 'email' : req.body.email, 'phone' : req.body.phone, 'address' : req.body.address}, {},function (err) {
+							if (err) { 
+								return apiResponse.ErrorResponse(res, err); 
+							}else{
+								return apiResponse.successResponseWithData(res,"Employee updated");
+							}
+						});
+					}
+					else{
+						console.log(foundUser);
+					}
+				});
+			} catch (err) {
+				//throw error in json response with status 500. 
+				return apiResponse.ErrorResponse(res, err);
+			}
+		}
+	];
+
 	exports.employeeDetail = [
 		auth,
 		function (req, res) {

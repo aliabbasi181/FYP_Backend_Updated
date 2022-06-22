@@ -19,6 +19,7 @@ router.post("/get-last-location-employee", EmployeeLocationController.getEmploye
 router.post("/get-employees-locations-on-fence-id", EmployeeLocationController.getEmployeeLocationOnFenceId);
 router.post("/get-employee-all-locations", EmployeeLocationController.getEmployeeAllLocations);
 router.post("/fence-history", EmployeeLocationController.getFenceHistory);
+router.post("/employee-update", EmployeeController.employeeUpdate);
 // router.put("/:id", BookController.bookUpdate);
 // router.delete("/:id", BookController.bookDelete);
 // router.get("/status", GeoController.checkUserFenseStatus);

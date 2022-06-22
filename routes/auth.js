@@ -9,6 +9,7 @@ router.get("/organizations", AuthController.organizationList);
 router.delete("/delete", AuthController.organizationDelete);
 router.get("/get-user-data", AuthController.getUserData);
 router.post("/change-org-status", AuthController.changeOrgStatus);
+router.post("/update-organization", AuthController.organizationUpdate);
 
 
 module.exports = router;

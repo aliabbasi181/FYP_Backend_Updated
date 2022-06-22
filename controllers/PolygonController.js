@@ -406,45 +406,21 @@ exports.currentLocations = [
 exports.polygonUpdate = [
 	auth,
 	(req, res) => {
-		console.log(req.body);
+		//console.log(req.body);
+		//return apiResponse.successResponseWithData(res, "Current locations of employees");
 		try {
-			const errors = validationResult(req);
-			var polygon = new Polygon(
-				{ 	name: req.body.name,
-					user: req.user,
-					points: req.body.points
-				});
-				console.log(polygon.points);
-			if (!errors.isEmpty()) {
-				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
-			}
-			else {
-				if(!mongoose.Types.ObjectId.isValid(req.body.id)){
-					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
-				}else{
-					Polygon.findById(req.body.id, function (err, foundPolygon) {
-						if(foundBook === null){
-							return apiResponse.notFoundResponse(res,"Book not exists with this id");
+			Polygon.findById(req.body.id, function (err, foundPolygon){
+				if(foundPolygon != null){
+					console.log(foundPolygon);
+					Polygon.findByIdAndUpdate(req.body.id, {'name': req.body.name, 'points' : req.body.points}, {},function (err) {
+						if (err) { 
+							return apiResponse.ErrorResponse(res, err); 
 						}else{
-							console.log(req.body.id);
-							//Check authorized user
-							if(foundPolygon.user.toString() !== req.user._id){
-								return apiResponse.unauthorizedResponse(res, "You are not authorized to do this operation.");
-							}else{
-								//update book.
-								Polygon.findByIdAndUpdate(req.body.id, polygon, {},function (err) {
-									if (err) { 
-										return apiResponse.ErrorResponse(res, err); 
-									}else{
-										let polygonData = new PolygonData(polygon);
-										return apiResponse.successResponseWithData(res,"Book update Success.", polygonData);
-									}
-								});
-							}
+							return apiResponse.successResponseWithData(res,"fence updated");
 						}
 					});
 				}
-			}
+			});
 		} catch (err) {
 			//throw error in json response with status 500. 
 			return apiResponse.ErrorResponse(res, err);

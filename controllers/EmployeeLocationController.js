@@ -341,7 +341,7 @@ exports.getEmployeeById = [
 
 exports.addUserLocation = [
   auth,
-  (req, res) => {
+  async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -354,10 +354,10 @@ exports.addUserLocation = [
         var datesMatched = false;
         var timeMatched = false;
         AssignPolygon.find({ employee: req.user._id }, "").then(
-         (assignFences) => {
-			  //console.log(assignFences)
+          async (assignFences) => {
+            //console.log(assignFences)
             if (assignFences.length > 0) {
-              assignFences.forEach((assignFence) => {
+              await assignFences.forEach(async (assignFence) => {
                 var dateFrom = assignFence.dateFrom;
                 var dateTo = assignFence.dateTo;
                 var dateCheck = req.body.date;
@@ -395,73 +395,74 @@ exports.addUserLocation = [
                     timeMatched = false;
                   }
                   if (timeMatched) {
-					  var polygon = [];
-					FenceModel.findById(assignFence.region, function (err, fence) {
-						if(fence){
-							fence.points.forEach((point)=> {
-								polygon.push(new Point(parseFloat(point.lat),parseFloat(point.lng)));
-							});
-             //console.log(polygon);
-						}
-					});
-          
-                    EmployeeLocation.find({
+                    var polygon = [];
+                    await FenceModel.findById(assignFence.region, async function (err, fence) {
+                      if (fence) {
+                        await fence.points.forEach(async (point) => {
+                          polygon.push(new Point(parseFloat(point.lat), parseFloat(point.lng)));
+                        });
+                        //console.log(polygon);
+                      }
+                    });
+
+                    await EmployeeLocation.find({
                       date: req.body.date,
-					  assignFenceId: assignFence._id
+                      assignFenceId: assignFence._id
                     }).then(async (locations) => {
-                      if (locations.length > 0) {
-						var oldLocations = [];
-						locations[0]['locations'].forEach((loc) => {
-							oldLocations.push(new LatLng(loc['lat'], loc['lng'], loc['time'], loc['inFence']))
-						});
-            await sleep(500);
-            console.log("Fetched Polygon: ",polygon);
-          var isInFence = isUserInFence(req.body.lat, req.body.lng, polygon);
-						oldLocations.push(new LatLng(req.body.lat, req.body.lng, req.body.time, isInFence));
-						var employeeLocation = new EmployeeLocation({
-							employee: req.user._id,
-							fence: assignFence.region,
-							assignFenceId: assignFence._id,
-							date: req.body.date,
-							locations: oldLocations,
-						  });
-                        EmployeeLocation.findByIdAndUpdate(locations[0]['_id'], {'locations': oldLocations}, {},function (err) {
-							if (err) { 
-								return apiResponse.ErrorResponse(res, err); 
-							}else{
-								return apiResponse.successResponseWithData(res,"location added Success.", employeeLocation);
-							}
-						});
-                      } else {
-						var userLocation = [];
-            console.log("Fetched Polygon: ",polygon);
-          var isInFence = isUserInFence(req.body.lat, req.body.lng, polygon);
-						userLocation.push(new LatLng(req.body.lat, req.body.lng, req.body.time, isInFence));
+                      console.log(locations?.length)
+                      if (locations?.length > 0) {
+                        var oldLocations = [];
+                        await locations[0]['locations'].forEach(async (loc) => {
+                          oldLocations.push(new LatLng(loc['lat'], loc['lng'], loc['time'], loc['inFence'],loc['read']))
+                        });
+                        // await sleep(5000);
+                        // console.log("Fetched Polygon: ",polygon);
+                        var isInFence =  isUserInFence(req.body.lat, req.body.lng, polygon);
+                         oldLocations.push(new LatLng(req.body.lat, req.body.lng, req.body.time, isInFence,false));
                         var employeeLocation = new EmployeeLocation({
                           employee: req.user._id,
                           fence: assignFence.region,
-						              assignFenceId: assignFence._id,
+                          assignFenceId: assignFence._id,
+                          date: req.body.date,
+                          locations: oldLocations,
+                        });
+                        await EmployeeLocation.findByIdAndUpdate(locations[0]['_id'], { 'locations': oldLocations }, {}, function (err) {
+                          if (err) {
+                            return apiResponse.ErrorResponse(res, err);
+                          } else {
+                            return apiResponse.successResponseWithData(res, "location added Success.", employeeLocation);
+                          }
+                        });
+                      } else {
+                        var userLocation = [];
+                        // console.log("Fetched Polygon: ",polygon);
+                        var isInFence = isUserInFence(req.body.lat, req.body.lng, polygon);
+                        userLocation.push(new LatLng(req.body.lat, req.body.lng, req.body.time, isInFence,false));
+                        var employeeLocation = new EmployeeLocation({
+                          employee: req.user._id,
+                          fence: assignFence.region,
+                          assignFenceId: assignFence._id,
                           date: req.body.date,
                           user: assignFence.user,
                           locations: userLocation,
                         });
                         console.log(employeeLocation);
                         employeeLocation.save(function (err) {
-							if (err) { return apiResponse.ErrorResponse(res, err); }
-							return apiResponse.successResponseWithData(res,"location added Success.", employeeLocation);
-						});
+                          if (err) { return apiResponse.ErrorResponse(res, err); }
+                          return apiResponse.successResponseWithData(res, "location added Success.", employeeLocation);
+                        });
                       }
                     });
                   }
-				  else{
-					return apiResponse.successResponseWithData(res, "you are not allowed to save location at this time in this fence");
-				  }
+                  else {
+                    return apiResponse.successResponseWithData(res, "you are not allowed to save location at this time in this fence");
+                  }
                 }
               });
-				//return apiResponse.ErrorResponse(res, "No assigned fence to you at this date and time");
-			  
+              //return apiResponse.ErrorResponse(res, "No assigned fence to you at this date and time");
+
             } else {
-				return apiResponse.successResponseWithData(res, "No assigned fence to you");
+              return apiResponse.successResponseWithData(res, "No assigned fence to you");
             }
           }
         );

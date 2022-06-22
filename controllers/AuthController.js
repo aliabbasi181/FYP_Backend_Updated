@@ -208,6 +208,34 @@ exports.organizationDelete = [
 	}
 ];
 
+exports.organizationUpdate = [
+	auth,
+	(req, res) => {
+		console.log(req.user._id);
+		//return apiResponse.successResponseWithData(res, "Current locations of employees");
+		try {
+			UserModel.findById(req.user._id, function (err, foundUser){
+				if(foundUser != null){
+					console.log(foundUser);
+					UserModel.findByIdAndUpdate(req.user._id, {'name': req.body.name, 'email' : req.body.email, 'phone' : req.body.phone, 'address' : req.body.address}, {},function (err) {
+						if (err) { 
+							return apiResponse.ErrorResponse(res, err); 
+						}else{
+							return apiResponse.successResponseWithData(res,"organization updated");
+						}
+					});
+				}
+				else{
+					console.log(foundUser);
+				}
+			});
+		} catch (err) {
+			//throw error in json response with status 500. 
+			return apiResponse.ErrorResponse(res, err);
+		}
+	}
+];
+
 
 
 exports.login = [
